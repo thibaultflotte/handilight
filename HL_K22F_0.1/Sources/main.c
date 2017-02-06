@@ -63,7 +63,7 @@
 #include "Init_Config.h"
 /* User includes (#include below this line is not maintained by Processor Expert) */
 #include "SendData.h"
-
+#include "lumiere.h"
 /*lint -save  -e970 Disable MISRA rule (6.3) checking. */
 int main(void)
 /*lint -restore Enable MISRA rule (6.3) checking. */
@@ -80,12 +80,14 @@ int main(void)
 /************************* PARTIE BLUETOOTH ***********************************/
   char testsensor[]="";
   char dataSend[]="";
+  uint16_t reference;
   unsigned char receiveChar = 0;
   uint16_t intensity;
   short inten;
   uint8_t lumiref;
   uint8_t lumi;
   uint16_t freq;
+  char inputDatas[15];
   LEDVerte_Disable();
   LEDBlanche_Disable();
   LEDRouge_Disable();
@@ -93,8 +95,7 @@ int main(void)
 	  BT1_RecvChar(&receiveChar);		//Tant qu'on a pas de W on essaye de recevoir
   }
   /* Capteur de Luminosite */
-  (void)AD2_Measure(TRUE);
-  (void)AD2_GetValue8(&lumiref);
+ lumiere_reference();
 /* contenu de la trame presence */
   char sensorInitial[] = "";
   sensorInitial[0] = 0x27;	//On définit les différents états des composants
@@ -111,7 +112,6 @@ int main(void)
   }
   BT1_SendChar('E');
   WAIT1_Waitms(3000);
-  char inputDatas[15];
   int i;
   while (receiveChar != 'B') {
 	  BT1_RecvChar(&receiveChar);// La tablette envoie "B" -> Trame présence Bien reçu
@@ -138,59 +138,15 @@ int main(void)
   					break; //On sort de la réception
   				}
   				inputDatas[i] = receiveChar;	//On met les données dans un buffer de données
-  				freq=(( (inputDatas[1]) <<8 | (inputDatas[2]) ));
-  				WAIT1_Waitms(1);
-
-  				if(inputDatas[0]==0x00){
-  					LEDRouge_Enable();
-  					LEDRouge_SetRatio8(255 - ((inputDatas[3]*255)/100));
-  					LEDRouge_SetFreqHz(freq);
- 					LED1_On();
-  				 }
-  				 if(inputDatas[0]==0x02){
-  					LEDVerte_Enable();
-  					LEDVerte_SetRatio8(255 - ((inputDatas[3]*255)/100));
-  					LEDVerte_SetFreqHz(freq);
-  					LED1_On();
-  				 }
-  				 if(inputDatas[0]==0x03){
-  					LEDBlanche_Enable();
-  					LEDBlanche_SetRatio8(255 - ((inputDatas[3]*255)/100));
-  					LEDBlanche_SetFreqHz(freq);
-  					LED1_On();
-  				 }
+  				lumiere_initialisation(inputDatas);
   			}
   		}
-  		for(int i=0; i<500; i++){
-  	  		sendData();
-  	  	(void)AD2_Measure(TRUE);
-  	  	(void)AD2_GetValue8(&lumi);
-  	  inten = 255 - ((inputDatas[3]*255)/100)+(lumi-lumiref);
-  	  if (inten <= 0){
-  		  intensity = 0;
-  	  }
-  	  else if (inten > 0 && inten<255){
-  		  intensity = inten;
-  	  }
-  	  else intensity= 255;
 
-  	  	if(inputDatas[0]==0x00){
-  	  	  	LEDRouge_Enable();
-  	  	  	LEDRouge_SetRatio8(intensity);
-  	  	  	LED1_On();
-  	  	}
-  	  	if(inputDatas[0]==0x02){
-  	  		LEDVerte_Enable();
-  	  		LEDVerte_SetRatio8(intensity);
-  	  		LED1_On();
-  	  	}
-  	  	if(inputDatas[0]==0x03){
-  	  		LEDBlanche_Enable();
-  	  		LEDBlanche_SetRatio8(intensity);
-  	  		LED1_On();
-  	  	}
-  	  	WAIT1_Waitms(1);
-  		}
+  			  (void)AD1_Measure(TRUE); /* do conversion and wait for the result */
+  			  (void)AD1_GetValue16(&reference);
+  		for(int i=0; i<500; i++){
+  	  		sendData(reference);
+  	  	lumiere_gestion(inputDatas);
   }
   LEDVerte_Disable();
   LED1_Off();
@@ -204,7 +160,8 @@ int main(void)
   /*** Processor Expert end of main routine. DON'T MODIFY THIS CODE!!! ***/
   for(;;){}
   /*** Processor Expert end of main routine. DON'T WRITE CODE BELOW!!! ***/
-} /*** End of main routine. DO NOT MODIFY THIS TEXT!!! ***/
+}
+}/*** End of main routine. DO NOT MODIFY THIS TEXT!!! ***/
 
 /* END main */
 /*!

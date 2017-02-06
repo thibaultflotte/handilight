@@ -34,7 +34,8 @@
 #include "MMA8451.h"
 extern int16_t x_gyro, y_gyro, z_gyro;
 
-void sendData(void){	//Il faudra surement retourner quelque chose plus tard dans une fonction émission mais pour le moment nous n'avons qu'a gérer le "gyroscope" indépendamment des autres composants
+
+void sendData(uint16_t references){	//Il faudra surement retourner quelque chose plus tard dans une fonction émission mais pour le moment nous n'avons qu'a gérer le "gyroscope" indépendamment des autres composants
 
 	int j, k, m = 0;
 	int gyrometerData[8];
@@ -53,9 +54,10 @@ void sendData(void){	//Il faudra surement retourner quelque chose plus tard dans
 	/************************* PARTIE ADC ACCELEROMETRE 1 AXE ***********************************/
 
 	  uint16_t value;
+
 	  (void)AD1_Measure(TRUE); /* do conversion and wait for the result */
 	  (void)AD1_GetValue16(&value);
-	  gyrometerData[3]= (value-155);
+	  gyrometerData[3]= (value-references);
 
 	for (j = 0; j < 8; j++) {
 		BT1_SendChar(gyrometerData[j]);

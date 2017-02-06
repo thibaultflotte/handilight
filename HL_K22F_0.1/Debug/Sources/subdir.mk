@@ -7,18 +7,21 @@ C_SRCS += \
 ../Sources/Events.c \
 ../Sources/MMA8451.c \
 ../Sources/SendData.c \
+../Sources/lumiere.c \
 ../Sources/main.c 
 
 OBJS += \
 ./Sources/Events.o \
 ./Sources/MMA8451.o \
 ./Sources/SendData.o \
+./Sources/lumiere.o \
 ./Sources/main.o 
 
 C_DEPS += \
 ./Sources/Events.d \
 ./Sources/MMA8451.d \
 ./Sources/SendData.d \
+./Sources/lumiere.d \
 ./Sources/main.d 
 
 
